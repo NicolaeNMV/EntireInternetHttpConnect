@@ -9,6 +9,9 @@ import sys
 import eventlet
 import re
 
+from eventlet import hubs
+hubs.use_hub("selects")
+
 class InternetCrawler(object):
   def __init__(self, concurrency=12, fileForResults="results.json"):
     # configuration 
@@ -72,8 +75,10 @@ class InternetCrawler(object):
 
   def writer(self):
     while True:
+      print "Write data"
       data = self.results.get()
       self.fileResults.write(json.dumps(data) + "\n")
+      self.fileResults.flush()
       print data
 
   def connect(self,ip,ipI):
@@ -81,23 +86,28 @@ class InternetCrawler(object):
         conn = socket.socket()
 
         conn.connect((str(ip), 80))
-        print "Connected"
+        print "Connected %s" % str(ip)
 
         conn.sendall('GET / HTTP/1.0\r\n\r\n')
-        data = conn.recv(1024)
+
+        data = ""
+        while True:
+          recv = conn.recv(1024)
+          if not recv: break
+          data += recv
+          if len(data) > 200: break
+
         conn.close()
         
-        #while True:
-        #  recv = conn.recv(1024)
-        #  if not recv: break
-        #  data += recv
         server_info = {
           'index': ipI,  
           'ip': str(ip),
           'server': self.getHTTPHeaders(data)
         }
         self.results.put(server_info)
-        print "End"
+
+        self.stats['success'] = self.stats['success'] + 1
+
       except socket.error, msg:
         print "Eroare %s" % msg
 
