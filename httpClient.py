@@ -8,6 +8,8 @@ import json
 import sys
 import eventlet
 import re
+from time import gmtime, strftime
+
 
 from eventlet import hubs
 hubs.use_hub("selects")
@@ -54,7 +56,7 @@ class InternetCrawler(object):
           conn.close()
           print "Connectivity check: OK"
         except eventlet.timeout.Timeout:
-          print "Error connection! Cannot connect to my check server!"
+          print "Connectivity check: FAIL! Error connection! Cannot connect to my check server!"
       eventlet.sleep(20)
   
   #@staticmethod
@@ -67,7 +69,7 @@ class InternetCrawler(object):
   def showStats(self):
     print "Show stats"
     while True:
-      print "Stats"
+      print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
       print "Timeout: %d" % self.stats['timeout']
       print "Success: %d" % self.stats['success']
       print "Current ip(%d): %s" % (self.stats['ipI'],self.stats['ip'])
