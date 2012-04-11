@@ -47,13 +47,12 @@ class InternetCrawler(object):
       conn = socket.socket()
       with eventlet.timeout.Timeout(self.conf['timeoutSecond']):
         try:
-          print "Trying to connect to amazon"
           conn.connect(("aws.amazon.com", 80))
           conn.close()
+          print "Connectivity check: OK"
         except eventlet.timeout.Timeout:
           print "Error connection! Cannot connect to my check server!"
-      print "Connection ok"
-      eventlet.sleep(60)
+      eventlet.sleep(20)
   
   #@staticmethod
   def getHTTPHeaders(self, body):
