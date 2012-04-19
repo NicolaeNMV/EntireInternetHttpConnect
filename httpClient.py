@@ -27,7 +27,7 @@ class InternetCrawler(object):
     # a green pool is a pool of greenthreads - you're pushing
     # tasks to it and they get executed when eventlet's loop is
     # active
-    self.pool = eventlet.GreenPool(concurrency)
+    self.pool = eventlet.GreenPool(concurrency + 5)
     # results
     self.results = eventlet.Queue()
     # iterator
@@ -46,7 +46,7 @@ class InternetCrawler(object):
     print "Worker %d" % concurrency
     print "Write json to %s" % fileForResults
 
-    for i in range(0,concurrency - 5):
+    for i in range(0,concurrency):
       print "Spawn %d" % i
       self.pool.spawn_n(self.worker)
     
@@ -72,7 +72,7 @@ class InternetCrawler(object):
   
   #@staticmethod
   def getHTTPHeader(self, body, header):
-    match = re.compile("%s:(.+?)\r\n"%header).search(body,re.IGNORECASE)
+    match = re.compile("%s:\s*(.+?)\r\n"%header).search(body,re.IGNORECASE)
     if match == None:
       return None
     return match.groups()[0]
@@ -86,12 +86,12 @@ class InternetCrawler(object):
   def writer(self):
     while True:
       try:
-        print data
         data = self.results.get()
+        print data
         self.fileResults.write(json.dumps(data) + "\n")
         self.fileResults.flush()
       except:
-        self.error("","Could not write %s" % data)
+        print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
 
   
   def request(self,conn):
@@ -143,7 +143,7 @@ class InternetCrawler(object):
           self.statsIncrement('timeout')
         
         except:
-          print "Unexpected error:", sys.exc_info()[0]
+          print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
           self.statsIncrement('errorUnexpected')
       
       if connected is None:
@@ -172,6 +172,11 @@ class InternetCrawler(object):
 
 
 if __name__=="__main__":
-  # fileForResults=sys.argv[1]
-  InternetCrawler(concurrency=10,fileForResults="results.json",ipI=1621243)
+  if len(sys.argv) is not 3:
+    print "%s: <number of paralel workers> <skip to the iterator position>" % sys.argv[0]
+    sys.exit()
+
+  concurrency=int(sys.argv[1])
+  startAtIpI=int(sys.argv[2])
+  InternetCrawler(concurrency=concurrency,fileForResults="results.json",ipI=startAtIpI)
   print "End"
