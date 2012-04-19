@@ -41,8 +41,6 @@ class InternetCrawler(object):
     for i in range(0,ipI):
       self.iIterator.next()
 
-    print "Starting the crawler"
-
     # results file
     self.fileResults = open(fileForResults, "a+", 0)
     # stats
@@ -86,7 +84,7 @@ class InternetCrawler(object):
     return match.groups()[0]
 
   def showStats(self):
-    lastIpI = 0
+    lastIpI = self.stats['ipI']
     while True:
       print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
       print "Progress: %f" % (float(self.stats['ipI']) / TOTALIP)
@@ -94,6 +92,7 @@ class InternetCrawler(object):
       print "Per second: %d" % perSecond
       print "Estimated time left %s" % str(timedelta(seconds=TOTALIP / perSecond))
       print self.stats
+      lastIpI = self.stats['ipI']
       eventlet.sleep(1)
 
   def writer(self):
@@ -198,5 +197,6 @@ if __name__=="__main__":
 
   concurrency=int(sys.argv[1])
   startAtIpI=int(sys.argv[2])
+  print "Starting the crawler"
   InternetCrawler(concurrency=concurrency,fileForResults="results.json",ipI=startAtIpI)
   print "End"
