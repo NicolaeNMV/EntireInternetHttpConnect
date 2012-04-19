@@ -159,9 +159,10 @@ class InternetCrawler(object):
             'server': serverName
           }
           self.results.put(server_info)
-          
+          print "Success %s" % strIp
           self.statsIncrement('success')
         except eventlet.timeout.Timeout:
+          self.error(strIp,"Request timeout")
           self.statsIncrement('requestTimeout')
 
 
