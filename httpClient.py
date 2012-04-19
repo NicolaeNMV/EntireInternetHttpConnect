@@ -85,11 +85,14 @@ class InternetCrawler(object):
 
   def writer(self):
     while True:
-      print "Write data"
-      data = self.results.get()
-      self.fileResults.write(json.dumps(data) + "\n")
-      self.fileResults.flush()
-      print data
+      try:
+        print data
+        data = self.results.get()
+        self.fileResults.write(json.dumps(data) + "\n")
+        self.fileResults.flush()
+      except:
+        self.error("","Could not write %s" % data)
+
   
   def request(self,conn):
     try:
@@ -104,6 +107,8 @@ class InternetCrawler(object):
       return data
     except socket.error, msg:
       print "Request error %s" % msg
+    except:
+      pass
 
   def statsIncrement(self,name):
     self.stats[name] += 1
