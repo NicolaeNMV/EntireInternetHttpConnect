@@ -11,12 +11,15 @@ import re
 from time import gmtime, strftime
 
 
-from eventlet import hubs
-hubs.use_hub("selects")
+#from eventlet import hubs
+#hubs.use_hub("selects")
 #hubs.use_hub("pyevent")
 
+# Unbuffer outputs
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
 class InternetCrawler(object):
-  def __init__(self, concurrency=12, fileForResults="results.json"):
+  def __init__(self, concurrency=12, fileForResults="results.json", ipI=0):
     # configuration 
     self.conf = {"timeoutConnect":5, "timeoutRequest":10}
 
@@ -28,8 +31,13 @@ class InternetCrawler(object):
     self.results = eventlet.Queue()
     # iterator
     self.iIterator = internetIterator()
+    # rewind the iterator to continue
+    for i in range(0,ipI):
+      self.iIterator.next()
+
+
     # results file
-    self.fileResults = open(fileForResults, 'w')
+    self.fileResults = open(fileForResults, 'w+', 0)
     # stats
     self.stats = {"timeout":0,"connected":0,
           "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,"ip":"","ipI":""}
@@ -158,5 +166,5 @@ class InternetCrawler(object):
 
 if __name__=="__main__":
   # fileForResults=sys.argv[1]
-  InternetCrawler(concurrency=10,fileForResults="results.json")
+  InternetCrawler(concurrency=10,fileForResults="results.json",ipI=1621243)
   print "End"
