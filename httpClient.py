@@ -10,6 +10,7 @@ import os
 import eventlet
 import re
 from time import gmtime, strftime
+from datetime import datetime, timedelta
 
 
 #from eventlet import hubs
@@ -18,6 +19,7 @@ from time import gmtime, strftime
 
 # Unbuffer outputs
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+TOTALIP = 3707764736
 
 class InternetCrawler(object):
   def __init__(self, concurrency=12, fileForResults="results.json", ipI=0):
@@ -41,7 +43,9 @@ class InternetCrawler(object):
     self.fileResults = open(fileForResults, "a+", 0)
     # stats
     self.stats = {"timeout":0,"connected":0,
-          "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,"ip":"","ipI":""}
+          "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,
+          "ip":"","ipI":0,"startedTime":""}
+    self.stats['startedTime'] = datetime.now()
 
     print "Worker %d" % concurrency
     print "Write json to %s" % fileForResults
@@ -78,8 +82,13 @@ class InternetCrawler(object):
     return match.groups()[0]
 
   def showStats(self):
+    lastIpI = 0
     while True:
       print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
+      print "Progress: %f" % (float(self.stats['ipI']) / TOTALIP)
+      perSecond = self.stats['ipI'] - lastIpI
+      print "Per second: %d" % perSecond
+      print "Estimated time left %s" % str(timedelta(seconds=TOTALIP / perSecond))
       print self.stats
       eventlet.sleep(1)
 
