@@ -160,6 +160,11 @@ class InternetCrawler(object):
       with eventlet.timeout.Timeout(self.conf['timeoutRequest']):
         try:
           answer = self.request(sock)
+          if len(answer) is 0:
+            self.error(strIp,"No data received")
+            self.statsIncrement('errorUnexpected')
+            continue
+          
           serverName = self.getHTTPHeader(answer,"Server")
           if serverName is None:
             self.error(strIp,"Invalid headers %s" % answer)
