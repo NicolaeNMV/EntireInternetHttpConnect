@@ -45,7 +45,7 @@ class InternetCrawler(object):
     self.fileResults = open(fileForResults, "a+", 0)
     # stats
     self.stats = {"timeout":0,"connected":0,
-          "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,
+          "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,"errorUnexpected":0,
           "ip":"","ipI":0,"startedTime":""}
     self.stats['startedTime'] = datetime.now()
 
