@@ -6,6 +6,7 @@ from eventlet.green import urllib2
 from eventlet.green import socket
 import json
 import sys
+import os
 import eventlet
 import re
 from time import gmtime, strftime
