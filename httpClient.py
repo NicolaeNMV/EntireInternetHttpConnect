@@ -38,7 +38,7 @@ class InternetCrawler(object):
 
 
     # results file
-    self.fileResults = open(fileForResults, 'w+', 0)
+    self.fileResults = open(fileForResults, "a+", 0)
     # stats
     self.stats = {"timeout":0,"connected":0,
           "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,"ip":"","ipI":""}
