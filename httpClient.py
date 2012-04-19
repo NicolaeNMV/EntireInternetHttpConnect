@@ -126,8 +126,6 @@ class InternetCrawler(object):
       return data
     except socket.error, msg:
       print "Request error %s" % msg
-    except:
-      traceback.print_exc()
 
   def statsIncrement(self,name):
     self.stats[name] += 1
