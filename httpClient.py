@@ -86,14 +86,18 @@ class InternetCrawler(object):
   def showStats(self):
     lastIpI = self.stats['ipI']
     while True:
-      print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
-      print "Progress: %f" % (float(self.stats['ipI']) / TOTALIP)
-      perSecond = self.stats['ipI'] - lastIpI
-      print "Per second: %d" % perSecond
-      print "Estimated time left %s" % str(timedelta(seconds=TOTALIP / perSecond))
-      print self.stats
-      lastIpI = self.stats['ipI']
-      eventlet.sleep(1)
+      try:
+        print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        print "Progress: %f" % (float(self.stats['ipI']) / TOTALIP)
+        perSecond = self.stats['ipI'] - lastIpI
+        print "Per second: %d" % perSecond
+        print "Estimated time left %s" % str(timedelta(seconds=TOTALIP / perSecond))
+        print self.stats
+        lastIpI = self.stats['ipI']
+        eventlet.sleep(1)
+      except:
+        print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+
 
   def writer(self):
     while True:
