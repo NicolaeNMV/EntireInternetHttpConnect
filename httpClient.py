@@ -124,7 +124,7 @@ class InternetCrawler(object):
 
   def error(self,ip,message):
     print >> sys.stderr, (ip,message)
-
+  
   def worker(self):
     sock = None
 
@@ -150,7 +150,6 @@ class InternetCrawler(object):
         
         except eventlet.timeout.Timeout:
           self.statsIncrement('timeout')
-        
         except:
           print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
           self.statsIncrement('errorUnexpected')
@@ -178,6 +177,9 @@ class InternetCrawler(object):
         except eventlet.timeout.Timeout:
           self.error(strIp,"Request timeout")
           self.statsIncrement('requestTimeout')
+        except:
+          print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+          self.statsIncrement('errorUnexpected')
 
 
 if __name__=="__main__":
