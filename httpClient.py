@@ -168,7 +168,7 @@ class InternetCrawler(object):
       with eventlet.timeout.Timeout(self.conf['timeoutRequest']):
         try:
           answer = self.request(sock)
-          if len(answer) is 0:
+          if answer is None or len(answer) is 0:
             self.error(strIp,"No data received")
             self.statsIncrement('errorUnexpected')
             continue
