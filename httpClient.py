@@ -107,7 +107,7 @@ class InternetCrawler(object):
       try:
         data = self.results.get()
         print data
-        self.fileResults.write(json.dumps(data) + "\n")
+        self.fileResults.write(json.dumps(data,ensure_ascii=False) + "\n")
         self.fileResults.flush()
       except:
         traceback.print_exc()
