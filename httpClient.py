@@ -84,7 +84,7 @@ class InternetCrawler(object):
     return match.groups()[0]
 
   def showStats(self):
-    lastIpI = self.stats['ipI'] if self.stats['ipI'] > 0 else 1
+    lastIpI = self.stats['ipI']
     while True:
       try:
         print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -94,10 +94,12 @@ class InternetCrawler(object):
         print "Estimated time left %s" % str(timedelta(seconds=TOTALIP / perSecond))
         print self.stats
         lastIpI = self.stats['ipI']
-        eventlet.sleep(1)
+      except ZeroDivisionError:
+        pass
       except:
         print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
-
+      finally:
+        eventlet.sleep(1)
 
   def writer(self):
     while True:
