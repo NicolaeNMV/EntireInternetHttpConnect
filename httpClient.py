@@ -13,11 +13,12 @@ from time import gmtime, strftime
 
 from eventlet import hubs
 hubs.use_hub("selects")
+#hubs.use_hub("pyevent")
 
 class InternetCrawler(object):
   def __init__(self, concurrency=12, fileForResults="results.json"):
     # configuration 
-    self.conf = {"timeoutSecond":5}
+    self.conf = {"timeoutConnect":5, "timeoutRequest":10}
 
     # a green pool is a pool of greenthreads - you're pushing
     # tasks to it and they get executed when eventlet's loop is
@@ -30,7 +31,8 @@ class InternetCrawler(object):
     # results file
     self.fileResults = open(fileForResults, 'w')
     # stats
-    self.stats = {"timeout":0,"success":0,"ip":"","ipI":""}
+    self.stats = {"timeout":0,"connected":0,
+          "success":0,"invalidHeaders":0,"requestTimeout":0,"connectError":0,"ip":"","ipI":""}
 
     print "Worker %d" % concurrency
     print "Write json to %s" % fileForResults
@@ -50,29 +52,26 @@ class InternetCrawler(object):
   def checkOurConnectivity(self):
     while True:
       conn = socket.socket()
-      with eventlet.timeout.Timeout(self.conf['timeoutSecond']):
+      with eventlet.timeout.Timeout(self.conf['timeoutConnect']):
         try:
           conn.connect(("aws.amazon.com", 80))
           conn.close()
           print "Connectivity check: OK"
         except eventlet.timeout.Timeout:
           print "Connectivity check: FAIL! Error connection! Cannot connect to my check server!"
-      eventlet.sleep(20)
+      eventlet.sleep(1)
   
   #@staticmethod
-  def getHTTPHeaders(self, body):
-    match = re.compile("Server:(.+?)\r\n").search(body,re.IGNORECASE)
+  def getHTTPHeader(self, body, header):
+    match = re.compile("%s:(.+?)\r\n"%header).search(body,re.IGNORECASE)
     if match == None:
-      return False
+      return None
     return match.groups()[0]
 
   def showStats(self):
-    print "Show stats"
     while True:
       print "Stats: %s" % strftime("%Y-%m-%d %H:%M:%S", gmtime())
-      print "Timeout: %d" % self.stats['timeout']
-      print "Success: %d" % self.stats['success']
-      print "Current ip(%d): %s" % (self.stats['ipI'],self.stats['ip'])
+      print self.stats
       eventlet.sleep(1)
 
   def writer(self):
@@ -82,49 +81,80 @@ class InternetCrawler(object):
       self.fileResults.write(json.dumps(data) + "\n")
       self.fileResults.flush()
       print data
+  
+  def request(self,conn):
+    try:
+      conn.sendall('GET / HTTP/1.0\r\n\r\n')
 
-  def connect(self,ip,ipI):
-      try:
-        conn = socket.socket()
+      data = ""
+      while True:
+        recv = conn.recv(1024)
+        if not recv: break
+        data += recv
+        if len(data) > 200: break
+      return data
+    except socket.error, msg:
+      print "Request error %s" % msg
 
-        conn.connect((str(ip), 80))
-        print "Connected %s" % str(ip)
+  def statsIncrement(self,name):
+    self.stats[name] += 1
 
-        conn.sendall('GET / HTTP/1.0\r\n\r\n')
-
-        data = ""
-        while True:
-          recv = conn.recv(1024)
-          if not recv: break
-          data += recv
-          if len(data) > 200: break
-
-        conn.close()
-        
-        server_info = {
-          'index': ipI,  
-          'ip': str(ip),
-          'server': self.getHTTPHeaders(data)
-        }
-        self.results.put(server_info)
-
-        self.stats['success'] = self.stats['success'] + 1
-
-      except socket.error, msg:
-        print "Eroare %s" % msg
+  def error(self,ip,message):
+    print >> sys.stderr, (ip,message)
 
   def worker(self):
+    sock = None
+
     while True:
+      if sock is not None:
+        sock.close()
+
+      sock = socket.socket()
       (ipI,ip) = self.iIterator.next()
       self.stats['ip'] = ip
       self.stats['ipI'] = ipI
+      strIp = str(ip)
 
-      with eventlet.timeout.Timeout(self.conf['timeoutSecond']):
+      connected = None
+      with eventlet.timeout.Timeout(self.conf['timeoutConnect']):
         try:
-          self.connect(ip,ipI)
+          sock.connect((strIp, 80))
+          self.statsIncrement('connected')
+          connected = True
+        except socket.error, msg:
+          self.error(strIp,"Connect error %s" % msg)
+          self.statsIncrement('connectError')
+        
         except eventlet.timeout.Timeout:
-          # counter of timeout requests
-          self.stats['timeout'] = self.stats['timeout'] + 1
+          self.statsIncrement('timeout')
+        
+        except:
+          print "Unexpected error:", sys.exc_info()[0]
+          self.statsIncrement('errorUnexpected')
+      
+      if connected is None:
+        continue
+
+      with eventlet.timeout.Timeout(self.conf['timeoutRequest']):
+        try:
+          answer = self.request(sock)
+          serverName = self.getHTTPHeader(answer,"Server")
+          if serverName is None:
+            self.error(strIp,"Invalid headers %s" % answer)
+            self.statsIncrement('invalidHeaders')
+            continue
+          
+          server_info = {
+            'index': ipI,  
+            'ip': strIp,
+            'server': serverName
+          }
+          self.results.put(server_info)
+          
+          self.statsIncrement('success')
+        except eventlet.timeout.Timeout:
+          self.statsIncrement('requestTimeout')
+
 
 if __name__=="__main__":
   # fileForResults=sys.argv[1]
