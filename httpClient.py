@@ -35,9 +35,13 @@ class InternetCrawler(object):
     # iterator
     self.iIterator = internetIterator()
     # rewind the iterator to continue
+    if ipI is not 0:
+      print "Jump to the ip i: %d" % ipI
+    
     for i in range(0,ipI):
       self.iIterator.next()
 
+    print "Starting the crawler"
 
     # results file
     self.fileResults = open(fileForResults, "a+", 0)
