@@ -9,6 +9,7 @@ import sys
 import os
 import eventlet
 import re
+import traceback
 from time import gmtime, strftime
 from datetime import datetime, timedelta
 
@@ -97,7 +98,7 @@ class InternetCrawler(object):
       except ZeroDivisionError:
         pass
       except:
-        print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+        traceback.print_exc()
       finally:
         eventlet.sleep(1)
 
@@ -109,7 +110,7 @@ class InternetCrawler(object):
         self.fileResults.write(json.dumps(data) + "\n")
         self.fileResults.flush()
       except:
-        print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+        traceback.print_exc()
 
   
   def request(self,conn):
@@ -126,7 +127,7 @@ class InternetCrawler(object):
     except socket.error, msg:
       print "Request error %s" % msg
     except:
-      pass
+      traceback.print_exc()
 
   def statsIncrement(self,name):
     self.stats[name] += 1
@@ -160,7 +161,7 @@ class InternetCrawler(object):
         except eventlet.timeout.Timeout:
           self.statsIncrement('timeout')
         except:
-          print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+          traceback.print_exc()
           self.statsIncrement('errorUnexpected')
       
       if connected is None:
@@ -192,7 +193,7 @@ class InternetCrawler(object):
           self.error(strIp,"Request timeout")
           self.statsIncrement('requestTimeout')
         except:
-          print >> sys.stderr, "Unexpected error ", sys.exc_info()[0]
+          traceback.print_exc()
           self.statsIncrement('errorUnexpected')
 
 
