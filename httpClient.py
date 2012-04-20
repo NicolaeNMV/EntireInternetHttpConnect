@@ -39,7 +39,7 @@ class InternetCrawler(object):
     if ipI is not 0:
       print "Jump to the ip i: %d" % ipI
     
-    for i in range(0,ipI):
+    for i in xrange(0,ipI):
       self.iIterator.next()
 
     # results file
@@ -53,7 +53,7 @@ class InternetCrawler(object):
     print "Worker %d" % concurrency
     print "Write json to %s" % fileForResults
 
-    for i in range(0,concurrency):
+    for i in xrange(0,concurrency):
       print "Spawn %d" % i
       self.pool.spawn_n(self.worker)
     
